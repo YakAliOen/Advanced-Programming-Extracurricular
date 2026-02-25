@@ -1,88 +1,109 @@
 #include <iostream>
+#include <vector> // untuk menyimpan data dari rute menuju F
 
 using namespace std;
 
-#define INF 9999  // angka tidak terbatas
-#define V 6       // jumlah vertex : 6
+#define INF 9999
+#define V 6 // amount of vertex
+
+// Function to showcase all route
+void printpath(vector<int> parent[], int node, string path)
+{
+    // Vector<int>: to store all route (yg dikunjungi)
+    if (node == -1)
+    {
+        cout << path << endl;
+        return;
+    }
+
+    // loop for showing path
+    for (int i = 0; i < parent[node].size(); i++)
+    {
+        int p = parent[node][i]; // to take parent or an active node
+
+        // proses output rute D - F
+        printpath(parent, p, char('A' + node) + string("") + path);
+    }
+}
 
 int main(void)
 {
-    // matriks / array 2 dimensi = { 1  1}
-    //                           = { 2, 2}
-    // array 1 dimensi = {1,2,3,4}
     int graph[V][V] =
     {
-        // A  B  C  D  E  F
-        {0, 5, 4, 0, 11, 0}, // A
-        {5, 0, 7, 3, 0, 0},  // B
-        {4, 7, 0, 0, 6, 4},  // C
-        {0, 3, 0, 0, 0, 0},  // D
-        {11, 0, 6, 0, 0, 0}, // E
-        {0, 0, 4, 0, 0, 0}   // F
+        // Metrix
+        // A  B  C   D  E   F
+        {0, 5, 7, 3, 11, 0}, // The first block's distances
+        {5, 0, 7, 3, 0, 0},  // The second block
+        {7, 7, 0, 0, 6, 4},
+        {3, 3, 0, 0, 0, 0},
+        {11, 0, 6, 0, 0, 0},
+        {0, 0, 4, 0, 0, 0}
     };
 
-    int distance[V]; // jarak terpendek
-    int visited[V];  // vertex yang dikunjungi
-    int parent[V];   // node yang akan diaktfikan
+    int distance[V]; // Jarak terpendek
+    int visited[V];  // Vertex visited
 
-    int start = 3;   // Start D
-    int finish = 5;  // Finish F
+    vector<int> parent[V];
 
-    // For loop awal
+    int start = 3;  // Start D
+    int finish = 5; // Finish F
+
     for (int i = 0; i < V; i++)
     {
-        distance[i] = INF;
-        visited[i] = 0;
-        parent[i] = -1; // vertex D sudah pasti tidak dipakai
+        distance[i] = INF; // Haven't started
+        visited[i] = 0;    // Haven't started
     }
 
     distance[start] = 0;
+    parent[start].push_back(-1); // Vertex D sdh pasti tdk dipakai
 
-    // Logic Shortest Path
-    for (int i = 0; i < V - 1; i++) // v-1 karena node D sudah tidak dipakai
+    for (int i = 0; i < V - 1; i++) // Node D can't be used anymore so -1
     {
-        // Min = menyimpan jarak terkecil (sementara), u = menyimpan edge dengan jarak terkecil
         int min = INF;
-        int u = -1;
+        int u = -1; // u stores edge w distance
 
-        for (int j = 0; j < V; j++)
+        for (int j = 0; j < V - 2; j++)
         {
             if (!visited[j] && distance[j] < min)
             {
-                // jika vertex J belum dicek dan jarak paling kecil maka node J dipilih
                 min = distance[j];
-                u = j; // untuk menyimpan edge / nominal jarak
+                u = j; // to store the nominal's distance
             }
         }
 
-        visited[u] = 1; // pindah ke node sebelah
+        if (u == -1)
+        {
+            break;
+        }
 
-        // Loop Untuk melanjutkan ke finish
+        visited[u] = 1; // to change into the node beside it
+
+        // loop to finish
         for (int k = 0; k < V; k++)
         {
-            if (!visited[k] && graph[u][k] != 0 &&
-                // node belum sampai ke finish dan nilai graph dari u dan v tidak 0
-                distance[u] + graph[u][k] < distance[k])
+            if (!visited[k] && graph[u][k] != 0)
             {
-                // jarak sementara + nilai graph < jarak sebelumnya
-                distance[k] = distance[u] + graph[u][k];
-                // hasil akhir = jarak sementara + jarak sebelumnya
-                parent[k] = u; // proses menyimpan node dilewati untuk di output
+                int newDist = distance[u] + graph[u][k];
+                // newdistance = jarak lama + jarak yang akan dikunjungi
+
+                if (newDist < distance[k])
+                {
+                    distance[k] = newDist;
+                    parent[k].clear();        // to delete the old parent
+                    parent[k].push_back(u);   // to store the new node
+                }
+                else if (newDist == distance[k])
+                {
+                    parent[k].push_back(u); // to store the next new node
+                }
             }
         }
     }
 
-    // output jarak
-    cout << " Jarak terpendek =" << distance[finish] << endl;
-    cout << "Path / Kota :";
+    cout << "Jarak pendek = " << distance[finish] << endl;
+    cout << "Semua Path & Path / Kota: ";
 
-    int temp = finish;
-
-    while (temp != -1)
-    {
-        cout << char('A' + temp) << " ";
-        temp = parent[temp];
-    }
+    printpath(parent, finish, "");
 
     return 0;
 }
